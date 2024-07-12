@@ -40,7 +40,7 @@ def search_and_format(file_content_dict, search_terms):
 
 def make_files_prompt(repo_dict, user_query):
     key_string = "\n".join(repo_dict.keys())
-    print('key string ', key_string, 'dict keys ', repo_dict.keys())
+    # print('key string ', key_string, 'dict keys ', repo_dict.keys())
     files_prompt = f"""{key_string}.
 Above is the file structure of github codebase. 
 To answer {user_query}, what files might be required. 
