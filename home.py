@@ -16,6 +16,7 @@ model = genai.GenerativeModel('gemini-1.5-flash')
 
 data_dir = '/home/rka/code/repo'
 repo_dict = {}
+REPO = ''
 
 def on_input(e: me.InputBlurEvent):
   state = me.state(State)
@@ -29,20 +30,26 @@ class State:
 @me.page(path="/")
 def app():
   global repo_dict
+  global REPO
   s = me.state(State)
+  html_title = """
+             <h1>Chat with GitHub repo using Gemini API(<a href="https://github.com/rakaar/chat_with_repo_gemini_api">code</a>)</h1>
+              """
+  me.html(html_title)
   me.input(
       label="Github Repo link",
       on_input=on_input,
       style={
           'font_size': 30,
-          'width': '90%',
+          'width': '100%',
           'text_align': 'center',
-          'margin': me.Margin.all(100),
+          # 'margin': me.Margin.all(100),
       }
   )
   if is_valid_repolink(s.input):
     repolink = s.input
     reponame = get_reponame(repolink)
+    REPO = reponame.replace('+', '/')
     pkl_filename = f"{reponame}.pkl"
     
 
@@ -59,7 +66,7 @@ def app():
 
     # go to chat
     try:
-       me.button("Proceed to Chat", on_click=nav_func)
+       me.button(f"Chat with {REPO}", on_click=nav_func, type="raised")
     except Exception as e:
        print('Erorr in navigating : ', e)
 
@@ -69,7 +76,10 @@ def nav_func(event: me.ClickEvent):
 
 @me.page(path="/chat")
 def page():
-  mel.chat(transform, title=f"Github Repo Chat with Gemini API repo", bot_user="gemini_mesop_bot")
+  global REPO
+  mel.chat(transform, title=f"Using Gemini API - Chat with GitHub repo {REPO}", bot_user="gemini_mesop_bot")
+  
+  
         
 def transform_history_to_genai_history(transform_history):
     genai_history = []
@@ -95,7 +105,7 @@ def transform(input: str, history: list[mel.ChatMessage]):
        files_prompt = make_files_prompt(repo_dict, input)
        response = model.generate_content(files_prompt)
        required_files = parse_arr_from_gemini_resp(response.text)
-       print(f'Suggested files are {required_files}')
+       print(f'Num of suggested files = {len(required_files)}')
        relevant_code = content_str_from_dict(repo_dict, required_files)
 
    input_to_LLM = "'''\n" + relevant_code + "\n'''\n" + "Use the above code if necessary." + input
