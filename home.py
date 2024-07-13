@@ -6,7 +6,7 @@ import os
 import mesop.labs as mel
 from dotenv import load_dotenv
 import google.generativeai as genai
-from dataclasses import dataclass, field
+from dataclasses import field
 
 
 load_dotenv()
@@ -19,14 +19,17 @@ data_dir = '/home/rka/code/repo'
 html_title = """
              <h1>Chat with GitHub repo using Gemini API(<a href="https://github.com/rakaar/chat_with_repo_gemini_api">code</a>)</h1>
               """
+prompt_to_use_codebase = "Use the above code if necessary. Preferably answer the question by citing the filepath and the code"
 input_style_dict = {
           'font_size': 30,
           'width': '100%',
           'text_align': 'center',
       }
 
+
+
 def on_input(e: me.InputBlurEvent):
-  state = me.state(State)
+  state = me.state(InputState)
   state.input = e.value
 
 @me.stateclass
@@ -35,13 +38,13 @@ class RepoState:
    name: str = ''
 
 @me.stateclass
-class State:
+class InputState:
   input: str = ""
 
 @me.page(path="/")
 def app():
   repo_state = me.state(RepoState)
-  s = me.state(State)
+  s = me.state(InputState)
   me.html(html_title)
   me.input(
       label="Github Repo link",
@@ -111,8 +114,8 @@ def transform(input: str, history: list[mel.ChatMessage]):
        print(f'Num of suggested files = {len(required_files)}')
        relevant_code = content_str_from_dict(repo_dict, required_files)
 
-   input_to_LLM = "'''\n" + relevant_code + "\n'''\n" + "Use the above code if necessary." + input
-  #  print('input_to_LLM=', input_to_LLM)
+   input_to_LLM = f"'''\n{relevant_code}\n'''\n {prompt_to_use_codebase}.{input}?"  
+   #  print('input_to_LLM=', input_to_LLM)
    genai_history = transform_history_to_genai_history(history)	
    chat = model.start_chat(history=genai_history)
    try:
