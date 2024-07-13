@@ -6,6 +6,8 @@ import os
 import mesop.labs as mel
 from dotenv import load_dotenv
 import google.generativeai as genai
+from dataclasses import dataclass, field
+
 
 load_dotenv()
 
@@ -13,15 +15,24 @@ GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 genai.configure(api_key=GOOGLE_API_KEY)
 model = genai.GenerativeModel('gemini-1.5-flash')
 
-
 data_dir = '/home/rka/code/repo'
-repo_dict = {}
-REPO = ''
+html_title = """
+             <h1>Chat with GitHub repo using Gemini API(<a href="https://github.com/rakaar/chat_with_repo_gemini_api">code</a>)</h1>
+              """
+input_style_dict = {
+          'font_size': 30,
+          'width': '100%',
+          'text_align': 'center',
+      }
 
 def on_input(e: me.InputBlurEvent):
   state = me.state(State)
   state.input = e.value
 
+@me.stateclass
+class RepoState:
+   path2content_map: dict = field(default_factory=lambda: {}) 
+   name: str = ''
 
 @me.stateclass
 class State:
@@ -29,27 +40,18 @@ class State:
 
 @me.page(path="/")
 def app():
-  global repo_dict
-  global REPO
+  repo_state = me.state(RepoState)
   s = me.state(State)
-  html_title = """
-             <h1>Chat with GitHub repo using Gemini API(<a href="https://github.com/rakaar/chat_with_repo_gemini_api">code</a>)</h1>
-              """
   me.html(html_title)
   me.input(
       label="Github Repo link",
       on_input=on_input,
-      style={
-          'font_size': 30,
-          'width': '100%',
-          'text_align': 'center',
-          # 'margin': me.Margin.all(100),
-      }
+      style= input_style_dict
   )
   if is_valid_repolink(s.input):
     repolink = s.input
     reponame = get_reponame(repolink)
-    REPO = reponame.replace('+', '/')
+    repo_state.name = reponame.replace('+', '/')
     pkl_filename = f"{reponame}.pkl"
     
 
@@ -57,16 +59,17 @@ def app():
       repo_clone_path = f"{data_dir}/{reponame}"
       clone_github_repo(repolink, repo_clone_path)
       repo_dict = create_file_content_dict(repo_clone_path)
+      repo_state.path2content_map = repo_dict
       with open(f'{data_dir}/{pkl_filename}', 'wb') as f:
           pickle.dump(repo_dict, f)
       delete_directory(repo_clone_path)
     else:
       with open(f"{data_dir}/{pkl_filename}", 'rb') as f:
-         repo_dict = pickle.load(f)
+         repo_state.path2content_map = pickle.load(f)
 
     # go to chat
     try:
-       me.button(f"Chat with {REPO}", on_click=nav_func, type="raised")
+       me.button(f"Chat with {repo_state.name}", on_click=nav_func, type="raised")
     except Exception as e:
        print('Erorr in navigating : ', e)
 
@@ -76,11 +79,10 @@ def nav_func(event: me.ClickEvent):
 
 @me.page(path="/chat")
 def page():
-  global REPO
-  mel.chat(transform, title=f"Using Gemini API - Chat with GitHub repo {REPO}", bot_user="gemini_mesop_bot")
+  repo_state = me.state(RepoState)
+  mel.chat(transform, title=f"Using Gemini API - Chat with GitHub repo {repo_state.name}", bot_user="gemini_mesop_bot")
   
-  
-        
+
 def transform_history_to_genai_history(transform_history):
     genai_history = []
     for message in transform_history:
@@ -92,8 +94,9 @@ def transform_history_to_genai_history(transform_history):
     return genai_history
 
 def transform(input: str, history: list[mel.ChatMessage]):
-   global repo_dict
-
+   repo_state = me.state(RepoState)
+   repo_dict = repo_state.path2content_map
+   
    important_words = filter_important_words(input)
    try:
        relevant_code = search_and_format(repo_dict, important_words)
