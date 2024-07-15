@@ -1,6 +1,6 @@
 import mesop as me
 from repo_utils import is_valid_repolink, get_reponame, clone_github_repo, create_file_content_dict, delete_directory
-from search_utils import filter_important_words, search_and_format, make_files_prompt, parse_arr_from_gemini_resp, content_str_from_dict, make_all_files_content_str
+from search_utils import make_files_prompt, parse_arr_from_gemini_resp, content_str_from_dict, make_all_files_content_str
 import pickle
 import os
 import mesop.labs as mel

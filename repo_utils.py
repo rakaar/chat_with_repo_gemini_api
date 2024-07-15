@@ -2,18 +2,11 @@ import git
 import os
 import re
 import concurrent.futures
-import nltk
-from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
-import string
 import chardet
 import chardet
 import json
 import shutil
 
-
-nltk.download('stopwords')
-nltk.download('punkt')
 
 
 def delete_directory(repo_clone_path):
