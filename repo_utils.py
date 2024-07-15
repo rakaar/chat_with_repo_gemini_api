@@ -110,7 +110,7 @@ def create_file_content_dict(clone_path):
     files_to_process = []
 
     for root, _, files in os.walk(clone_path):
-        if '/.git/' in root:
+        if '/.git' in root:
             continue
         for file in files:
             file_path = os.path.join(root, file)

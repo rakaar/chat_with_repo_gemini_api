@@ -63,7 +63,9 @@ def app():
 
     if not os.path.exists(os.path.join(data_dir, pkl_filename)):
       repo_clone_path = f"{data_dir}/{reponame}"
+      # me.text(text='1/2 Cloning Repo', type="headline-4")
       clone_github_repo(repolink, repo_clone_path)
+      # me.text('2/2 Processing Files', type="headline-4")
       repo_dict = create_file_content_dict(repo_clone_path)
       with open(f'{data_dir}/{pkl_filename}', 'wb') as f:
           pickle.dump(repo_dict, f)
@@ -87,7 +89,6 @@ def nav_func(event: me.ClickEvent):
 @me.page(path="/chat")
 def page():
   repo_state = me.state(RepoState)
-#   mel.chat(transform, title=f"Using Gemini API - Chat with GitHub repo {repo_state.name}", bot_user="gemini_mesop_bot")
   mel.chat(transform, title=me.html(f"<h2>Chat with {repo_state.name} | <a href='/'> Change Repo </a> </h2>"), bot_user="gemini_mesop_bot")
   
 
