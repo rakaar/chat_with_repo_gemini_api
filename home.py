@@ -87,7 +87,8 @@ def nav_func(event: me.ClickEvent):
 @me.page(path="/chat")
 def page():
   repo_state = me.state(RepoState)
-  mel.chat(transform, title=f"Using Gemini API - Chat with GitHub repo {repo_state.name}", bot_user="gemini_mesop_bot")
+#   mel.chat(transform, title=f"Using Gemini API - Chat with GitHub repo {repo_state.name}", bot_user="gemini_mesop_bot")
+  mel.chat(transform, title=me.html(f"<h2>Chat with {repo_state.name} | <a href='/'> Change Repo </a> </h2>"), bot_user="gemini_mesop_bot")
   
 
 def transform_history_to_genai_history(transform_history, is_entire_code_loaded, entire_code, prompt_to_use_codebase):
