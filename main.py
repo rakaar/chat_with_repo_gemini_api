@@ -15,7 +15,7 @@ GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 genai.configure(api_key=GOOGLE_API_KEY)
 model = genai.GenerativeModel('gemini-1.5-flash')
 
-data_dir = '/home/rka/code/repo'
+data_dir = './repo'
 html_title = """
              <h1>Chat with GitHub repo using Gemini API(<a href="https://github.com/rakaar/chat_with_repo_gemini_api">code</a>)</h1>
               """
@@ -61,19 +61,13 @@ def app():
     pkl_filename = f"{reponame}.pkl"
     
 
-    if not os.path.exists(os.path.join(data_dir, pkl_filename)):
-      repo_clone_path = f"{data_dir}/{reponame}"
-      # me.text(text='1/2 Cloning Repo', type="headline-4")
-      clone_github_repo(repolink, repo_clone_path)
-      # me.text('2/2 Processing Files', type="headline-4")
-      repo_dict = create_file_content_dict(repo_clone_path)
-      with open(f'{data_dir}/{pkl_filename}', 'wb') as f:
+    repo_clone_path = f"{data_dir}/{reponame}"
+    clone_github_repo(repolink, repo_clone_path)
+    repo_dict = create_file_content_dict(repo_clone_path)
+    with open(f'{data_dir}/{pkl_filename}', 'wb') as f:
           pickle.dump(repo_dict, f)
-      delete_directory(repo_clone_path)
-    else:
-      with open(f"{data_dir}/{pkl_filename}", 'rb') as f:
-         repo_dict = pickle.load(f)
-
+    delete_directory(repo_clone_path)
+    
     # go to chat
     repo_state.path2content_map = repo_dict
     repo_state.entire_code = make_all_files_content_str(repo_dict)
