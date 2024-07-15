@@ -10,6 +10,11 @@ nltk.download('stopwords')
 nltk.download('punkt')
 
 
+def make_all_files_content_str(repo_dict):
+    formatted_string = ""
+    for filepath, content in repo_dict.items():
+        formatted_string += f"===\nFilepath: {filepath}\n\n File content:\n{content}\n\n"
+    return formatted_string
 
 def filter_important_words(query):
     stop_words = set(stopwords.words('english'))
