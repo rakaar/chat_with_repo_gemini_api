@@ -99,6 +99,7 @@ def process_file(file_path, clone_path):
         return None
 
 def create_file_content_dict(clone_path):
+    print('Processing Files')
     file_content_dict = {}
     files_to_process = []
 
@@ -117,4 +118,5 @@ def create_file_content_dict(clone_path):
                 relative_path, text = result
                 file_content_dict[relative_path] = text
 
+    print(f"Processed {len(file_content_dict)} files.")
     return file_content_dict

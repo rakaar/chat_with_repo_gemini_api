@@ -1,7 +1,6 @@
 import mesop as me
 from repo_utils import is_valid_repolink, get_reponame, clone_github_repo, create_file_content_dict, delete_directory
 from search_utils import make_files_prompt, parse_arr_from_gemini_resp, content_str_from_dict, make_all_files_content_str
-import pickle
 import os
 import mesop.labs as mel
 from dotenv import load_dotenv
@@ -25,7 +24,9 @@ input_style_dict = {
           'text_align': 'center',
       }
 
-
+def nav_func(event: me.ClickEvent):
+   print('navigating to chat')
+   me.navigate('/chat')
 
 def on_input(e: me.InputBlurEvent):
   state = me.state(InputState)
@@ -37,6 +38,7 @@ class RepoState:
    name: str = ''
    entire_code: str = ''
    is_entire_code_loaded: int = -1
+   is_repo_cloned: bool = False  
 
 @me.stateclass
 class InputState:
@@ -53,34 +55,34 @@ def app():
       style= input_style_dict
   )
 
-  repo_state.is_entire_code_loaded = -1
-  if is_valid_repolink(s.input):
+  if is_valid_repolink(s.input) and not repo_state.is_repo_cloned:
     repolink = s.input
     reponame = get_reponame(repolink)
     repo_state.name = reponame.replace('+', '/')
-    pkl_filename = f"{reponame}.pkl"
-    
-
     repo_clone_path = f"{data_dir}/{reponame}"
     clone_github_repo(repolink, repo_clone_path)
     repo_dict = create_file_content_dict(repo_clone_path)
-    with open(f'{data_dir}/{pkl_filename}', 'wb') as f:
-          pickle.dump(repo_dict, f)
     delete_directory(repo_clone_path)
     
     # go to chat
     repo_state.path2content_map = repo_dict
     repo_state.entire_code = make_all_files_content_str(repo_dict)
+
+    repo_state.is_repo_cloned = True
     try:
-       me.button(f"Chat with {repo_state.name}", on_click=nav_func, type="raised")
+       print('Showing button')
+       me.button(f"Chat with {repo_state.name}", on_click=lambda event: me.navigate('/chat'), type="raised")
     except Exception as e:
        print('Erorr in navigating : ', e)
 
 
-def nav_func(event: me.ClickEvent):
-   me.navigate('/chat')
+
 
 @me.page(path="/chat")
+def page1():
+   me.text('This page issue?')
+
+@me.page(path="/cat")
 def page():
   repo_state = me.state(RepoState)
   mel.chat(transform, title=me.html(f"<h2>Chat with {repo_state.name} | <a href='/'> Change Repo </a> </h2>"), bot_user="gemini_mesop_bot")
